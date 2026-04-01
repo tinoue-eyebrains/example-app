@@ -1,0 +1,25 @@
+deptrac:
+  paths:
+    - ./src
+  exclude_files:
+    - '#.*\/vendor\/.*#'
+  layers:
+    - name: Domain
+      collectors:
+        - type: classLike
+          value: '^Domain\\'
+    - name: Application
+      collectors:
+        - type: classLike
+          value: '^Application\\'
+    - name: Infrastructure
+      collectors:
+        - type: classLike
+          value: '^Infrastructure\\'
+  ruleset:
+    Domain: []
+    Application:
+      - Domain
+    Infrastructure:
+      - Domain
+      - Application
