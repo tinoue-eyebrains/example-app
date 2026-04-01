@@ -7,15 +7,23 @@ deptrac:
     - name: Domain
       collectors:
         - type: classLike
-          value: '^Domain\\'
+          value: .*Domain.*
     - name: Application
       collectors:
         - type: classLike
-          value: '^Application\\'
+          value: .*Application.*
     - name: Infrastructure
       collectors:
         - type: classLike
-          value: '^Infrastructure\\'
+          value: .*Infrastructure.*
+    - name: Framework
+      collectors:
+        - type: classLike
+          value: .*Illuminate.*
+    - name: Database
+      collectors:
+        - type: classLike
+          value: .*Database\\Factories.*
   ruleset:
     Domain: []
     Application:
@@ -23,3 +31,7 @@ deptrac:
     Infrastructure:
       - Domain
       - Application
+      - Framework
+      - Database
+    Framework: []
+    Database: []
