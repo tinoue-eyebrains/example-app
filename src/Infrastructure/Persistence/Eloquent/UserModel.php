@@ -16,6 +16,8 @@ class UserModel extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    protected $table = 'users';
+
     protected static function newFactory(): UserFactory
     {
         return UserFactory::new();
