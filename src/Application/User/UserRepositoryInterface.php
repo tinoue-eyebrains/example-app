@@ -10,7 +10,14 @@ interface UserRepositoryInterface
 
     public function existsByEmailExcept(string $email, int $exceptUserId): bool;
 
-    public function findPaginated(int $page, int $perPage, string $nameSearch, string $emailSearch): UserListPage;
+    public function findPaginated(
+        int $page,
+        int $perPage,
+        string $nameSearch,
+        string $emailSearch,
+        string $sortColumn = 'id',
+        string $sortDirection = 'desc',
+    ): UserListPage;
 
     public function findById(int $id): ?User;
 

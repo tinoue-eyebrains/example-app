@@ -21,6 +21,24 @@ type ListResponse = {
     };
 };
 
+type SortColumn = 'id' | 'email';
+type SortOrder = 'asc' | 'desc';
+
+function SortCaret({ active, order }: { active: boolean; order: SortOrder }): JSX.Element {
+    if (!active) {
+        return (
+            <span className="ml-1 inline-block w-4 text-center text-gray-300" aria-hidden>
+                ↕
+            </span>
+        );
+    }
+    return (
+        <span className="ml-1 inline-block w-4 text-center text-[#1e3a5f]" aria-hidden>
+            {order === 'asc' ? '↑' : '↓'}
+        </span>
+    );
+}
+
 function hashHue(s: string): number {
     let h = 0;
     for (let i = 0; i < s.length; i += 1) {
@@ -109,6 +127,8 @@ export function UserSettingsPage(): JSX.Element {
     const [nameFilter, setNameFilter] = useState('');
     const [emailFilter, setEmailFilter] = useState('');
     const [page, setPage] = useState(1);
+    const [sortBy, setSortBy] = useState<SortColumn>('id');
+    const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
     const [rows, setRows] = useState<UserRow[]>([]);
     const [meta, setMeta] = useState<ListResponse['meta'] | null>(null);
     const [loading, setLoading] = useState(true);
@@ -135,6 +155,8 @@ export function UserSettingsPage(): JSX.Element {
         if (emailFilter !== '') {
             params.set('email', emailFilter);
         }
+        params.set('sort', sortBy);
+        params.set('order', sortOrder);
         try {
             const res = await fetch(`/api/users?${params.toString()}`, {
                 headers: { Accept: 'application/json' },
@@ -155,11 +177,21 @@ export function UserSettingsPage(): JSX.Element {
         } finally {
             setLoading(false);
         }
-    }, [page, nameFilter, emailFilter]);
+    }, [page, nameFilter, emailFilter, sortBy, sortOrder]);
 
     useEffect(() => {
         void load();
     }, [load]);
+
+    function toggleSort(column: SortColumn): void {
+        setPage(1);
+        if (sortBy === column) {
+            setSortOrder((o) => (o === 'asc' ? 'desc' : 'asc'));
+        } else {
+            setSortBy(column);
+            setSortOrder(column === 'id' ? 'desc' : 'asc');
+        }
+    }
 
     function onSearch(e: FormEvent<HTMLFormElement>): void {
         e.preventDefault();
@@ -309,10 +341,43 @@ export function UserSettingsPage(): JSX.Element {
                             <thead className="bg-gray-50/80">
                                 <tr>
                                     <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
-                                        ID
+                                        <button
+                                            type="button"
+                                            className={`inline-flex items-center rounded-lg px-1 py-0.5 hover:bg-gray-100/80 ${
+                                                sortBy === 'id' ? 'text-[#1e3a5f]' : 'text-gray-600'
+                                            }`}
+                                            aria-sort={
+                                                sortBy === 'id'
+                                                    ? sortOrder === 'asc'
+                                                        ? 'ascending'
+                                                        : 'descending'
+                                                    : 'none'
+                                            }
+                                            onClick={() => toggleSort('id')}
+                                        >
+                                            ID
+                                            <SortCaret active={sortBy === 'id'} order={sortOrder} />
+                                        </button>
                                     </th>
                                     <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
-                                        ユーザー
+                                        <button
+                                            type="button"
+                                            className={`inline-flex items-center rounded-lg px-1 py-0.5 normal-case tracking-normal hover:bg-gray-100/80 ${
+                                                sortBy === 'email' ? 'text-[#1e3a5f]' : 'text-gray-600'
+                                            }`}
+                                            aria-label="メールアドレスの順で並べ替え"
+                                            aria-sort={
+                                                sortBy === 'email'
+                                                    ? sortOrder === 'asc'
+                                                        ? 'ascending'
+                                                        : 'descending'
+                                                    : 'none'
+                                            }
+                                            onClick={() => toggleSort('email')}
+                                        >
+                                            ユーザー
+                                            <SortCaret active={sortBy === 'email'} order={sortOrder} />
+                                        </button>
                                     </th>
                                     <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wide text-gray-600">
                                         操作

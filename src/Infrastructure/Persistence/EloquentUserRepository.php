@@ -27,9 +27,18 @@ final class EloquentUserRepository implements UserRepositoryInterface
             ->exists();
     }
 
-    public function findPaginated(int $page, int $perPage, string $nameSearch, string $emailSearch): UserListPage
-    {
-        $query = UserModel::query()->orderByDesc('id');
+    public function findPaginated(
+        int $page,
+        int $perPage,
+        string $nameSearch,
+        string $emailSearch,
+        string $sortColumn = 'id',
+        string $sortDirection = 'desc',
+    ): UserListPage {
+        $column = $sortColumn === 'email' ? 'email' : 'id';
+        $direction = $sortDirection === 'asc' ? 'asc' : 'desc';
+
+        $query = UserModel::query();
         $nameTrim = trim($nameSearch);
         if ($nameTrim !== '') {
             $query->where('name', 'like', SqlLikePattern::contains($nameTrim));
@@ -37,6 +46,11 @@ final class EloquentUserRepository implements UserRepositoryInterface
         $emailTrim = trim($emailSearch);
         if ($emailTrim !== '') {
             $query->where('email', 'like', SqlLikePattern::contains($emailTrim));
+        }
+
+        $query->orderBy($column, $direction);
+        if ($column !== 'id') {
+            $query->orderBy('id', $direction);
         }
 
         $paginator = $query->paginate($perPage, ['id', 'name', 'email', 'avatar_path'], 'page', $page);

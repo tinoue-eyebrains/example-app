@@ -37,8 +37,10 @@ class UserController extends Controller
         $perPage = (int) ($validated['per_page'] ?? 10);
         $name = (string) ($validated['name'] ?? '');
         $email = (string) ($validated['email'] ?? '');
+        $sort = (string) ($validated['sort'] ?? 'id');
+        $order = (string) ($validated['order'] ?? 'desc');
 
-        $result = $users->findPaginated($page, $perPage, $name, $email);
+        $result = $users->findPaginated($page, $perPage, $name, $email, $sort, $order);
 
         $data = array_map(function (array $item): array {
             return [

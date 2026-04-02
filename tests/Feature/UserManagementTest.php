@@ -52,6 +52,33 @@ class UserManagementTest extends TestCase
             ->assertJsonPath('data.0.email', 'alice@example.com');
     }
 
+    public function test_list_sorts_by_email_asc(): void
+    {
+        UserModel::factory()->create(['email' => 'zebra@example.com']);
+        UserModel::factory()->create(['email' => 'alpha@example.com']);
+
+        $this->getJson('/api/users?sort=email&order=asc&per_page=10')
+            ->assertOk()
+            ->assertJsonPath('data.0.email', 'alpha@example.com')
+            ->assertJsonPath('data.1.email', 'zebra@example.com');
+    }
+
+    public function test_list_sorts_by_id_asc(): void
+    {
+        $first = UserModel::factory()->create();
+        $second = UserModel::factory()->create();
+
+        $this->getJson('/api/users?sort=id&order=asc&per_page=10')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', min($first->id, $second->id))
+            ->assertJsonPath('data.1.id', max($first->id, $second->id));
+    }
+
+    public function test_list_rejects_invalid_sort_field(): void
+    {
+        $this->getJson('/api/users?sort=name')->assertUnprocessable();
+    }
+
     public function test_list_includes_avatar_url_key(): void
     {
         UserModel::factory()->create(['name' => 'X', 'email' => 'x@example.com']);

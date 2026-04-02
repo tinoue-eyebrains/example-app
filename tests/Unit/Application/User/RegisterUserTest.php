@@ -38,8 +38,14 @@ class RegisterUserTest extends TestCase
                 return false;
             }
 
-            public function findPaginated(int $page, int $perPage, string $nameSearch, string $emailSearch): UserListPage
-            {
+            public function findPaginated(
+                int $page,
+                int $perPage,
+                string $nameSearch,
+                string $emailSearch,
+                string $sortColumn = 'id',
+                string $sortDirection = 'desc',
+            ): UserListPage {
                 return new UserListPage([], 0, $perPage, $page, 0);
             }
 
@@ -101,8 +107,14 @@ class RegisterUserTest extends TestCase
                 return false;
             }
 
-            public function findPaginated(int $page, int $perPage, string $nameSearch, string $emailSearch): UserListPage
-            {
+            public function findPaginated(
+                int $page,
+                int $perPage,
+                string $nameSearch,
+                string $emailSearch,
+                string $sortColumn = 'id',
+                string $sortDirection = 'desc',
+            ): UserListPage {
                 return new UserListPage([], 0, $perPage, $page, 0);
             }
 

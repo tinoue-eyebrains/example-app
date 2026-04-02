@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ListUsersRequest extends FormRequest
 {
@@ -22,6 +23,14 @@ class ListUsersRequest extends FormRequest
         if (is_string($email)) {
             $merge['email'] = trim($email);
         }
+        $sort = $this->query('sort');
+        if (is_string($sort)) {
+            $merge['sort'] = strtolower(trim($sort));
+        }
+        $order = $this->query('order');
+        if (is_string($order)) {
+            $merge['order'] = strtolower(trim($order));
+        }
         if ($merge !== []) {
             $this->merge($merge);
         }
@@ -37,6 +46,8 @@ class ListUsersRequest extends FormRequest
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
             'name' => ['sometimes', 'string', 'max:255'],
             'email' => ['sometimes', 'string', 'max:255'],
+            'sort' => ['sometimes', 'string', Rule::in(['id', 'email'])],
+            'order' => ['sometimes', 'string', Rule::in(['asc', 'desc'])],
         ];
     }
 }
