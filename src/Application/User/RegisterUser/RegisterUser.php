@@ -17,13 +17,12 @@ final class RegisterUser
     public function execute(RegisterUserInput $input): RegisterUserResult
     {
         if ($this->users->existsByEmail($input->email)) {
-            throw new EmailAlreadyRegisteredException('Email is already registered.');
+            throw new EmailAlreadyRegisteredException('このメールアドレスは既に登録されています。');
         }
 
         $hashed = $this->hasher->hash($input->password);
         $user = User::register($input->name, $input->email, $hashed);
         $saved = $this->users->save($user);
-
         $id = $saved->id();
         if ($id === null) {
             throw new \RuntimeException('User id missing after save.');

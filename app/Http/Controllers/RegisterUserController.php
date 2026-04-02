@@ -21,7 +21,12 @@ class RegisterUserController extends Controller
 
             return response()->json(['id' => $result->userId], JsonResponse::HTTP_CREATED);
         } catch (EmailAlreadyRegisteredException $e) {
-            return response()->json(['message' => $e->getMessage()], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
+            return response()->json([
+                'message' => $e->getMessage(),
+                'errors' => [
+                    'email' => [$e->getMessage()],
+                ],
+            ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
         }
     }
 }

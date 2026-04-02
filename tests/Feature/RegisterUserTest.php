@@ -26,6 +26,18 @@ class RegisterUserTest extends TestCase
         ]);
     }
 
+    public function test_register_validation_errors_return_unprocessable_with_errors_key(): void
+    {
+        $response = $this->postJson('/api/users', [
+            'name' => '',
+            'email' => 'invalid',
+            'password' => 'short',
+        ]);
+
+        $response->assertUnprocessable()
+            ->assertJsonStructure(['message', 'errors']);
+    }
+
     public function test_register_duplicate_email_returns_unprocessable(): void
     {
         $this->postJson('/api/users', [
@@ -41,6 +53,7 @@ class RegisterUserTest extends TestCase
         ]);
 
         $response->assertUnprocessable()
-            ->assertJsonPath('message', 'Email is already registered.');
+            ->assertJsonValidationErrors(['email'])
+            ->assertJsonPath('errors.email.0', 'このメールアドレスは既に登録されています。');
     }
 }
