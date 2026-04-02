@@ -56,4 +56,23 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
 # example-app
+
+## データベースとストレージの準備
+
+スキーマをデータベースに反映するには、マイグレーションを実行してください。初回セットアップ時やマイグレーションファイルを追加・変更したあとに必要です。
+
+```bash
+php artisan migrate
+```
+
+Docker や Laravel Sail でアプリを動かしている場合は、PHP が動いているコンテナ側で同じコマンドを実行してください（例: `./vendor/bin/sail artisan migrate`）。
+
+ユーザーのプロフィール画像など、`public` ディスク（`storage/app/public`）に保存したファイルをブラウザから URL で配信するには、`public/storage` からのシンボリックリンクが必要です。**初回に一度**、次を実行してください。
+
+```bash
+php artisan storage:link
+```
+
+Sail を使う場合は `./vendor/bin/sail artisan storage:link` です。すでに `public/storage` がある場合はスキップされます。
