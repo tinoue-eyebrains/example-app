@@ -47,6 +47,11 @@ class RegisterUserTest extends TestCase
             {
                 return 'hashed_'.$plain;
             }
+
+            public function verify(string $plain, string $hashed): bool
+            {
+                return $hashed === 'hashed_'.$plain;
+            }
         };
 
         $useCase = new RegisterUser($repo, $hasher);
@@ -81,6 +86,11 @@ class RegisterUserTest extends TestCase
             public function hash(string $plain): string
             {
                 return 'x';
+            }
+
+            public function verify(string $plain, string $hashed): bool
+            {
+                return false;
             }
         };
 
