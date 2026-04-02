@@ -19,9 +19,11 @@ final class UserMapper
 
     public function toModel(User $user): UserModel
     {
-        $model = new UserModel;
         if ($user->id() !== null) {
+            $model = UserModel::query()->find($user->id()) ?? new UserModel;
             $model->setAttribute($model->getKeyName(), $user->id());
+        } else {
+            $model = new UserModel;
         }
         $model->name = $user->name();
         $model->email = $user->email();
