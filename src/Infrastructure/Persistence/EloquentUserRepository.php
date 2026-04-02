@@ -6,6 +6,7 @@ use Application\User\UserListPage;
 use Application\User\UserRepositoryInterface;
 use Domain\User\User;
 use Infrastructure\Persistence\Eloquent\UserModel;
+use Infrastructure\Support\SqlLikePattern;
 
 final class EloquentUserRepository implements UserRepositoryInterface
 {
@@ -31,21 +32,20 @@ final class EloquentUserRepository implements UserRepositoryInterface
         $query = UserModel::query()->orderByDesc('id');
         $nameTrim = trim($nameSearch);
         if ($nameTrim !== '') {
-            $like = '%'.addcslashes($nameTrim, '%_\\').'%';
-            $query->where('name', 'like', $like);
+            $query->where('name', 'like', SqlLikePattern::contains($nameTrim));
         }
         $emailTrim = trim($emailSearch);
         if ($emailTrim !== '') {
-            $like = '%'.addcslashes($emailTrim, '%_\\').'%';
-            $query->where('email', 'like', $like);
+            $query->where('email', 'like', SqlLikePattern::contains($emailTrim));
         }
 
-        $paginator = $query->paginate($perPage, ['id', 'name', 'email'], 'page', $page);
-        /** @var list<array{id: int, name: string, email: string}> $items */
+        $paginator = $query->paginate($perPage, ['id', 'name', 'email', 'avatar_path'], 'page', $page);
+        /** @var list<array{id: int, name: string, email: string, avatar_path: ?string}> $items */
         $items = $paginator->getCollection()->map(fn (UserModel $m): array => [
             'id' => (int) $m->getKey(),
             'name' => (string) $m->name,
             'email' => (string) $m->email,
+            'avatar_path' => is_string($m->avatar_path) && $m->avatar_path !== '' ? $m->avatar_path : null,
         ])->values()->all();
 
         return new UserListPage(

@@ -21,7 +21,7 @@ final class RegisterUser
         }
 
         $hashed = $this->hasher->hash($input->password);
-        $user = User::register($input->name, $input->email, $hashed);
+        $user = User::register($input->name, $input->email, $hashed, $input->avatarPath);
         $saved = $this->users->save($user);
         $id = $saved->id();
         if ($id === null) {

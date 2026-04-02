@@ -3,6 +3,9 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Infrastructure\Persistence\Eloquent\UserModel;
 use Tests\TestCase;
 
 class RegisterUserTest extends TestCase
@@ -55,5 +58,30 @@ class RegisterUserTest extends TestCase
         $response->assertUnprocessable()
             ->assertJsonValidationErrors(['email'])
             ->assertJsonPath('errors.email.0', 'このメールアドレスは既に登録されています。');
+    }
+
+    public function test_register_with_avatar_stores_path(): void
+    {
+        Storage::fake('public');
+
+        $file = UploadedFile::fake()->image('face.png', 80, 80);
+
+        $response = $this->post('/api/users', [
+            'name' => 'Photo User',
+            'email' => 'photo@example.com',
+            'password' => 'password123',
+            'avatar' => $file,
+        ], ['Accept' => 'application/json']);
+
+        $response->assertCreated();
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'photo@example.com',
+            'name' => 'Photo User',
+        ]);
+
+        $path = UserModel::query()->where('email', 'photo@example.com')->value('avatar_path');
+        $this->assertIsString($path);
+        Storage::disk('public')->assertExists($path);
     }
 }

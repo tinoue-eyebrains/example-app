@@ -9,5 +9,6 @@ final readonly class UpdateUserInput
         public string $name,
         public string $email,
         public ?string $password,
+        public ?string $newAvatarPath = null,
     ) {}
 }

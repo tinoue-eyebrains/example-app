@@ -8,5 +8,6 @@ final readonly class RegisterUserInput
         public string $name,
         public string $email,
         public string $password,
+        public ?string $avatarPath = null,
     ) {}
 }

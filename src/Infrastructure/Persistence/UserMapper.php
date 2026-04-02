@@ -9,11 +9,14 @@ final class UserMapper
 {
     public function toDomain(UserModel $model): User
     {
+        $avatar = $model->avatar_path;
+
         return User::restore(
             (int) $model->getKey(),
             (string) $model->name,
             (string) $model->email,
             (string) $model->getRawOriginal('password'),
+            is_string($avatar) && $avatar !== '' ? $avatar : null,
         );
     }
 
@@ -28,6 +31,7 @@ final class UserMapper
         $model->name = $user->name();
         $model->email = $user->email();
         $model->password = $user->hashedPassword();
+        $model->avatar_path = $user->avatarPath();
 
         return $model;
     }

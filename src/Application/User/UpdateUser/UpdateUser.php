@@ -30,7 +30,8 @@ final class UpdateUser
             ? $this->hasher->hash($input->password)
             : $existing->hashedPassword();
 
-        $updated = User::restore($input->id, $input->name, $input->email, $hash);
+        $avatarPath = $input->newAvatarPath !== null ? $input->newAvatarPath : $existing->avatarPath();
+        $updated = User::restore($input->id, $input->name, $input->email, $hash, $avatarPath);
         $this->users->save($updated);
     }
 }

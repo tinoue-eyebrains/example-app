@@ -9,16 +9,17 @@ final class User
         private readonly string $name,
         private readonly string $email,
         private readonly string $hashedPassword,
+        private readonly ?string $avatarPath,
     ) {}
 
-    public static function register(string $name, string $email, string $hashedPassword): self
+    public static function register(string $name, string $email, string $hashedPassword, ?string $avatarPath = null): self
     {
-        return new self(null, $name, $email, $hashedPassword);
+        return new self(null, $name, $email, $hashedPassword, $avatarPath);
     }
 
-    public static function restore(int $id, string $name, string $email, string $hashedPassword): self
+    public static function restore(int $id, string $name, string $email, string $hashedPassword, ?string $avatarPath = null): self
     {
-        return new self($id, $name, $email, $hashedPassword);
+        return new self($id, $name, $email, $hashedPassword, $avatarPath);
     }
 
     public function id(): ?int
@@ -28,7 +29,12 @@ final class User
 
     public function withId(int $id): self
     {
-        return new self($id, $this->name, $this->email, $this->hashedPassword);
+        return new self($id, $this->name, $this->email, $this->hashedPassword, $this->avatarPath);
+    }
+
+    public function withAvatarPath(?string $path): self
+    {
+        return new self($this->id, $this->name, $this->email, $this->hashedPassword, $path);
     }
 
     public function name(): string
@@ -44,5 +50,10 @@ final class User
     public function hashedPassword(): string
     {
         return $this->hashedPassword;
+    }
+
+    public function avatarPath(): ?string
+    {
+        return $this->avatarPath;
     }
 }

@@ -52,6 +52,15 @@ class UserManagementTest extends TestCase
             ->assertJsonPath('data.0.email', 'alice@example.com');
     }
 
+    public function test_list_includes_avatar_url_key(): void
+    {
+        UserModel::factory()->create(['name' => 'X', 'email' => 'x@example.com']);
+
+        $this->getJson('/api/users')
+            ->assertOk()
+            ->assertJsonPath('data.0.avatar_url', null);
+    }
+
     public function test_show_returns_user(): void
     {
         $user = UserModel::factory()->create(['name' => 'Show Me', 'email' => 'show@example.com']);
@@ -60,7 +69,8 @@ class UserManagementTest extends TestCase
             ->assertOk()
             ->assertJsonPath('id', $user->id)
             ->assertJsonPath('name', 'Show Me')
-            ->assertJsonPath('email', 'show@example.com');
+            ->assertJsonPath('email', 'show@example.com')
+            ->assertJsonPath('avatar_url', null);
     }
 
     public function test_show_missing_returns_not_found(): void

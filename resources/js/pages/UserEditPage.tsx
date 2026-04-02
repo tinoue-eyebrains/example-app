@@ -9,13 +9,13 @@ import {
     validatePasswordField,
 } from '../validation/registerUserClient';
 
-type ApiUser = { id: number; name: string; email: string };
+type ApiUser = { id: number; name: string; email: string; avatar_url: string | null };
 type ApiErrorBody = {
     message?: string;
     errors?: Record<string, string[]>;
 };
 
-function scrollToFirstFieldError(fieldErrors: Partial<Record<RegisterFieldKey, string>>): void {
+function scrollToFirstFieldError(fieldErrors: Partial<Record<RegisterFieldKey | 'avatar', string>>): void {
     queueMicrotask(() => {
         for (const key of REGISTER_FIELD_ORDER) {
             if (!fieldErrors[key]) {
@@ -26,7 +26,10 @@ function scrollToFirstFieldError(fieldErrors: Partial<Record<RegisterFieldKey, s
             if (el instanceof HTMLInputElement) {
                 el.focus();
             }
-            break;
+            return;
+        }
+        if (fieldErrors.avatar) {
+            document.getElementById('edit-field-avatar')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     });
 }
@@ -42,7 +45,10 @@ export function UserEditPage(): JSX.Element {
     const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading');
     const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting'>('idle');
     const [bannerMessage, setBannerMessage] = useState<string | null>(null);
-    const [fieldErrors, setFieldErrors] = useState<Partial<Record<RegisterFieldKey, string>>>({});
+    const [fieldErrors, setFieldErrors] = useState<Partial<Record<RegisterFieldKey | 'avatar', string>>>({});
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+    const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string | null>(null);
 
     useEffect(() => {
         if (!Number.isFinite(userId) || userId < 1) {
@@ -68,6 +74,7 @@ export function UserEditPage(): JSX.Element {
                 const data = (await res.json()) as ApiUser;
                 setName(data.name);
                 setEmail(data.email);
+                setCurrentAvatarUrl(data.avatar_url ?? null);
                 setLoadState('ready');
             } catch {
                 if (!cancelled) {
@@ -80,6 +87,14 @@ export function UserEditPage(): JSX.Element {
             cancelled = true;
         };
     }, [userId]);
+
+    useEffect(() => {
+        return () => {
+            if (avatarPreview !== null) {
+                URL.revokeObjectURL(avatarPreview);
+            }
+        };
+    }, [avatarPreview]);
 
     async function onSubmit(e: FormEvent<HTMLFormElement>): Promise<void> {
         e.preventDefault();
@@ -106,6 +121,10 @@ export function UserEditPage(): JSX.Element {
             }
         }
 
+        if (avatarFile !== null && avatarFile.size > 2048 * 1024) {
+            nextErrors.avatar = '画像は2MB以下にしてください。';
+        }
+
         if (Object.keys(nextErrors).length > 0) {
             setFieldErrors(nextErrors);
             setSubmitStatus('idle');
@@ -113,19 +132,21 @@ export function UserEditPage(): JSX.Element {
             return;
         }
 
-        const body: { name: string; email: string; password?: string } = {
-            name: name.trim(),
-            email: email.trim(),
-        };
+        const fd = new FormData();
+        fd.append('name', name.trim());
+        fd.append('email', email.trim());
         if (password !== '') {
-            body.password = password;
+            fd.append('password', password);
+        }
+        if (avatarFile !== null) {
+            fd.append('avatar', avatarFile);
         }
 
         try {
-            const res = await fetch(`/api/users/${userId}`, {
+            const res = await fetch(`/api/users/${String(userId)}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-                body: JSON.stringify(body),
+                body: fd,
+                headers: { Accept: 'application/json' },
             });
 
             if (res.status === 204) {
@@ -137,7 +158,7 @@ export function UserEditPage(): JSX.Element {
             const data = (await res.json()) as ApiErrorBody;
 
             if (res.status === 422) {
-                const fe: Partial<Record<RegisterFieldKey, string>> = {};
+                const fe: Partial<Record<RegisterFieldKey | 'avatar', string>> = {};
                 if (data.errors) {
                     REGISTER_FIELD_ORDER.forEach((key) => {
                         const first = data.errors?.[key]?.[0];
@@ -145,6 +166,10 @@ export function UserEditPage(): JSX.Element {
                             fe[key] = first;
                         }
                     });
+                    const av = data.errors?.avatar?.[0];
+                    if (av) {
+                        fe.avatar = av;
+                    }
                 }
                 if (Object.keys(fe).length > 0) {
                     setFieldErrors(fe);
@@ -343,6 +368,48 @@ export function UserEditPage(): JSX.Element {
                     {fieldErrors.password ? (
                         <p className="mt-1 text-sm text-red-700" role="alert">
                             {fieldErrors.password}
+                        </p>
+                    ) : null}
+                </div>
+                <div id="edit-field-avatar">
+                    <label htmlFor="edit-avatar-input" className="mb-1 block text-xs font-medium text-gray-700">
+                        プロフィール画像（任意）
+                    </label>
+                    <input
+                        id="edit-avatar-input"
+                        className="w-full cursor-pointer rounded-md border border-gray-300 bg-white px-3 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-gray-100 file:px-3 file:py-1 file:text-sm"
+                        name="avatar"
+                        type="file"
+                        accept="image/jpeg,image/png,image/gif,image/webp"
+                        onChange={(e) => {
+                            const f = e.target.files?.[0] ?? null;
+                            setAvatarFile(f);
+                            setAvatarPreview((prev) => {
+                                if (prev !== null) {
+                                    URL.revokeObjectURL(prev);
+                                }
+                                return f ? URL.createObjectURL(f) : null;
+                            });
+                            setFieldErrors((prev) => {
+                                if (prev.avatar === undefined) {
+                                    return prev;
+                                }
+                                const next = { ...prev };
+                                delete next.avatar;
+                                return next;
+                            });
+                        }}
+                    />
+                    {avatarPreview || currentAvatarUrl ? (
+                        <img
+                            src={avatarPreview ?? currentAvatarUrl ?? ''}
+                            alt=""
+                            className="mt-2 h-16 w-16 rounded-full object-cover ring-1 ring-gray-200"
+                        />
+                    ) : null}
+                    {fieldErrors.avatar ? (
+                        <p className="mt-1 text-sm text-red-700" role="alert">
+                            {fieldErrors.avatar}
                         </p>
                     ) : null}
                 </div>
