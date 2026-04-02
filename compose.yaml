@@ -22,11 +22,16 @@ services:
         networks:
             - sail
         depends_on:
-            - mysql
-            - redis
-            - meilisearch
-            - mailpit
-            - selenium
+            mysql:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+            meilisearch:
+                condition: service_healthy
+            mailpit:
+                condition: service_started
+            selenium:
+                condition: service_started
     mysql:
         image: 'mysql:8.4'
         ports:
